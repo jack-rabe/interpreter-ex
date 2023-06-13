@@ -20,37 +20,97 @@ defmodule Lexer do
     }
   end
 
-  def next_token(lexer = %Lexer{}) do
+  def read_identifier(lexer = %Lexer{}) do
+    %{char: char, lexer: l} = next_char(lexer)
+
+    if(is_letter(char)) do
+      {l, str} = read_identifier(l)
+      {l, char <> str}
+    else
+      {lexer, ""}
+    end
+  end
+
+  def is_letter(nil) do
+    false
+  end
+
+  def is_letter(c) do
+    [c | _] = String.to_charlist(c)
+    (?a <= c and c <= ?z) or (?A <= c and c <= ?Z) or c == ?_
+  end
+
+  def _is_number(c) do
+    c in ~w{0 1 2 3 4 5 6 7 8 9}
+  end
+
+  def read_number(lexer = %Lexer{}) do
+    %{char: char, lexer: l} = next_char(lexer)
+
+    if(_is_number(char)) do
+      {l, str} = read_number(l)
+      {l, char <> str}
+    else
+      {lexer, ""}
+    end
+  end
+
+  def skip_whitespace(lexer = %Lexer{}) do
     %{char: c, lexer: l} = next_char(lexer)
 
-    token =
+    if not is_nil(c) and Regex.match?(~r(\s), c) do
+      skip_whitespace(l)
+    else
+      lexer
+    end
+  end
+
+  def next_token(lexer = %Lexer{}) do
+    lexer = skip_whitespace(lexer)
+    %{char: c, lexer: l} = next_char(lexer)
+
+    {token, l} =
       case c do
         "=" ->
-          :assign
+          {:assign, l}
 
         ";" ->
-          :semicolon
+          {:semicolon, l}
 
         "(" ->
-          :left_paren
+          {:left_paren, l}
 
         ")" ->
-          :right_paren
+          {:right_paren, l}
 
         "," ->
-          :comma
+          {:comma, l}
 
         "+" ->
-          :plus
+          {:plus, l}
 
         "{" ->
-          :left_brace
+          {:left_brace, l}
 
         "}" ->
-          :right_brace
+          {:right_brace, l}
 
         nil ->
-          nil
+          {nil, l}
+
+        ident ->
+          cond do
+            is_letter(c) ->
+              {l, str} = read_identifier(l)
+              {ident <> str, l}
+
+            _is_number(c) ->
+              {l, str} = read_number(l)
+              {ident <> str, l}
+
+            true ->
+              {:illegal, l}
+          end
       end
 
     %Lexer{
