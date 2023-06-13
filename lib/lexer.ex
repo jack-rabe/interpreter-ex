@@ -1,5 +1,6 @@
 defmodule Lexer do
   defstruct [:input, tokens: [], position: 0, read_position: 0]
+  @keywords %{"fn" => :function, "let" => :let}
 
   def next_char(lexer = %Lexer{}) do
     char =
@@ -102,7 +103,13 @@ defmodule Lexer do
           cond do
             is_letter(c) ->
               {l, str} = read_identifier(l)
-              {ident <> str, l}
+              word = ident <> str
+
+              if word in Map.keys(@keywords) do
+                {Map.get(@keywords, word), l}
+              else
+                {word, l}
+              end
 
             _is_number(c) ->
               {l, str} = read_number(l)
