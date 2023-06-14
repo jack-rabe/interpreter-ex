@@ -97,7 +97,13 @@ defmodule Lexer do
     {token, l} =
       case c do
         "=" ->
-          {:assign, l}
+          %{char: c, lexer: lex} = next_char(l)
+
+          if c == "=" do
+            {:equal, lex}
+          else
+            {:assign, l}
+          end
 
         ";" ->
           {:semicolon, l}
@@ -113,6 +119,27 @@ defmodule Lexer do
 
         "+" ->
           {:plus, l}
+
+        "-" ->
+          {:minus, l}
+
+        "!" ->
+          %{char: c, lexer: lex} = next_char(l)
+
+          if c == "=" do
+            {:not_equal, lex}
+          else
+            {:bang, l}
+          end
+
+        "/" ->
+          {:slash, l}
+
+        ">" ->
+          {:gt, l}
+
+        "<" ->
+          {:lt, l}
 
         "{" ->
           {:left_brace, l}
