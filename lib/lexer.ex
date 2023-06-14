@@ -1,7 +1,27 @@
 defmodule Lexer do
   defstruct [:input, tokens: [], position: 0, read_position: 0]
+
   @keywords %{"fn" => :function, "let" => :let}
 
+  @type token :: atom | integer | String.t()
+
+  @doc """
+    retrieves the next character, advancing the lexer one position
+
+  ## Examples
+
+  iex> Lexer.next_char(%Lexer{input: "let x = 5;"})
+  %{
+    char: "l",
+    lexer: %Lexer{
+      input: "let x = 5;",
+      tokens: [],
+      position: 0,
+      read_position: 1
+    }
+  }
+  """
+  @spec next_char(%Lexer{}) :: %{char: String.t() | nil, lexer: %Lexer{}}
   def next_char(lexer = %Lexer{}) do
     char =
       if lexer.read_position >= String.length(lexer.input) do
@@ -21,6 +41,7 @@ defmodule Lexer do
     }
   end
 
+  @spec read_identifier(%Lexer{}) :: {%Lexer{}, String.t()}
   def read_identifier(lexer = %Lexer{}) do
     %{char: char, lexer: l} = next_char(lexer)
 
@@ -36,6 +57,7 @@ defmodule Lexer do
     false
   end
 
+  @spec is_letter(String.t()) :: boolean
   def is_letter(c) do
     [c | _] = String.to_charlist(c)
     (?a <= c and c <= ?z) or (?A <= c and c <= ?Z) or c == ?_
@@ -56,6 +78,7 @@ defmodule Lexer do
     end
   end
 
+  @spec skip_whitespace(%Lexer{}) :: %Lexer{}
   def skip_whitespace(lexer = %Lexer{}) do
     %{char: c, lexer: l} = next_char(lexer)
 
@@ -66,6 +89,7 @@ defmodule Lexer do
     end
   end
 
+  @spec next_token(%Lexer{}) :: %Lexer{}
   def next_token(lexer = %Lexer{}) do
     lexer = skip_whitespace(lexer)
     %{char: c, lexer: l} = next_char(lexer)
@@ -112,8 +136,9 @@ defmodule Lexer do
               end
 
             _is_number(c) ->
-              {l, str} = read_number(l)
-              {ident <> str, l}
+              {l, rest_of_num} = read_number(l)
+              number = String.to_integer(ident <> rest_of_num)
+              {number, l}
 
             true ->
               {:illegal, l}
@@ -128,7 +153,8 @@ defmodule Lexer do
     }
   end
 
-  def parse(lexer = %Lexer{}) do
+  @spec parse(%Lexer{}) :: %Lexer{} | list(token)
+  def(parse(lexer = %Lexer{})) do
     l = next_token(lexer)
     [last_token | _] = l.tokens
 
