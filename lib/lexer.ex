@@ -22,34 +22,34 @@ defmodule Lexer do
   }
   """
   @spec next_char(%Lexer{}) :: %{char: String.t() | nil, lexer: %Lexer{}}
-  def next_char(lexer = %Lexer{}) do
+  def next_char(initial = %Lexer{}) do
     char =
-      if lexer.read_position >= String.length(lexer.input) do
+      if initial.read_position >= String.length(initial.input) do
         nil
       else
-        String.at(lexer.input, lexer.read_position)
+        String.at(initial.input, initial.read_position)
       end
 
     %{
       char: char,
       lexer: %Lexer{
-        input: lexer.input,
-        tokens: lexer.tokens,
-        position: lexer.read_position,
-        read_position: lexer.read_position + 1
+        input: initial.input,
+        tokens: initial.tokens,
+        position: initial.read_position,
+        read_position: initial.read_position + 1
       }
     }
   end
 
   @spec read_identifier(%Lexer{}) :: {%Lexer{}, String.t()}
-  def read_identifier(lexer = %Lexer{}) do
-    %{char: char, lexer: l} = next_char(lexer)
+  def read_identifier(initial = %Lexer{}) do
+    %{char: char, lexer: advanced_lexer} = next_char(initial)
 
     if(is_letter(char)) do
-      {l, str} = read_identifier(l)
-      {l, char <> str}
+      {next_lexer, str} = read_identifier(advanced_lexer)
+      {next_lexer, char <> str}
     else
-      {lexer, ""}
+      {initial, ""}
     end
   end
 
@@ -67,116 +67,121 @@ defmodule Lexer do
     c in ~w{0 1 2 3 4 5 6 7 8 9}
   end
 
-  def read_number(lexer = %Lexer{}) do
-    %{char: char, lexer: l} = next_char(lexer)
+  def read_number(input = %Lexer{}) do
+    %{char: char, lexer: advanced_lexer} = next_char(input)
 
     if(_is_number(char)) do
-      {l, str} = read_number(l)
-      {l, char <> str}
+      {next_lexer, str} = read_number(advanced_lexer)
+      {next_lexer, char <> str}
     else
-      {lexer, ""}
+      {input, ""}
     end
   end
 
   @spec skip_whitespace(%Lexer{}) :: %Lexer{}
-  def skip_whitespace(lexer = %Lexer{}) do
-    %{char: c, lexer: l} = next_char(lexer)
+  def skip_whitespace(input = %Lexer{}) do
+    %{char: c, lexer: advanced_lexer} = next_char(input)
 
     if not is_nil(c) and Regex.match?(~r(\s), c) do
-      skip_whitespace(l)
+      skip_whitespace(advanced_lexer)
     else
-      lexer
+      input
     end
   end
 
   @spec next_token(%Lexer{}) :: %Lexer{}
-  def next_token(lexer = %Lexer{}) do
-    lexer = skip_whitespace(lexer)
-    %{char: c, lexer: l} = next_char(lexer)
+  def next_token(input = %Lexer{}) do
+    no_whitespace_lexer = skip_whitespace(input)
+    %{char: c, lexer: advanced_lexer} = next_char(no_whitespace_lexer)
 
-    {token, l} =
+    {token, final_lexer} =
       case c do
         "=" ->
-          %{char: c, lexer: lex} = next_char(l)
+          %{char: c, lexer: lex} = next_char(advanced_lexer)
 
           if c == "=" do
             {:equal, lex}
           else
-            {:assign, l}
+            {:assign, advanced_lexer}
           end
 
         ";" ->
-          {:semicolon, l}
+          {:semicolon, advanced_lexer}
 
         "(" ->
-          {:left_paren, l}
+          {:left_paren, advanced_lexer}
 
         ")" ->
-          {:right_paren, l}
+          {:right_paren, advanced_lexer}
 
         "," ->
-          {:comma, l}
+          {:comma, advanced_lexer}
 
         "+" ->
-          {:plus, l}
+          {:plus, advanced_lexer}
 
         "-" ->
-          {:minus, l}
+          {:minus, advanced_lexer}
 
         "!" ->
-          %{char: c, lexer: lex} = next_char(l)
+          %{char: c, lexer: lex} = next_char(advanced_lexer)
 
           if c == "=" do
             {:not_equal, lex}
           else
-            {:bang, l}
+            {:bang, advanced_lexer}
           end
 
         "/" ->
-          {:slash, l}
+          {:slash, advanced_lexer}
 
         ">" ->
-          {:gt, l}
+          {:gt, advanced_lexer}
 
         "<" ->
-          {:lt, l}
+          {:lt, advanced_lexer}
 
         "{" ->
-          {:left_brace, l}
+          {:left_brace, advanced_lexer}
 
         "}" ->
-          {:right_brace, l}
+          {:right_brace, advanced_lexer}
 
         nil ->
-          {nil, l}
+          {nil, advanced_lexer}
 
         ident ->
           cond do
             is_letter(c) ->
-              {l, str} = read_identifier(l)
+              {full_word_lexer, str} = read_identifier(advanced_lexer)
               word = ident <> str
 
               if word in Map.keys(@keywords) do
-                {Map.get(@keywords, word), l}
+                {Map.get(@keywords, word), full_word_lexer}
               else
-                {word, l}
+                {word, full_word_lexer}
               end
 
             _is_number(c) ->
-              {l, rest_of_num} = read_number(l)
+              {full_num_lexer, rest_of_num} = read_number(advanced_lexer)
               number = String.to_integer(ident <> rest_of_num)
-              {number, l}
+              {number, full_num_lexer}
 
             true ->
-              {:illegal, l}
+              {:illegal, advanced_lexer}
           end
       end
 
+    put_token(final_lexer, token)
+  end
+
+  @spec put_token(%Lexer{}, token) :: %Lexer{}
+  def(put_token(lexer = %Lexer{}, token)) do
     %Lexer{
-      input: l.input,
-      tokens: [token | l.tokens],
-      position: l.position,
-      read_position: l.read_position
+      input: lexer.input,
+      tokens: [token | lexer.tokens],
+      position: lexer.position,
+      read_position: lexer.read_position
     }
   end
 

@@ -3,10 +3,11 @@ defmodule LexerTest do
   doctest Lexer
 
   test "tests that the correct tokens are returned" do
-    lexer = %Lexer{input: "<>==,=!+(){!=}"}
+    lexer = %Lexer{input: "%<>==,=!+(){!=}"}
     tokens = Lexer.parse(lexer)
 
     assert tokens == [
+             :illegal,
              :lt,
              :gt,
              :equal,
