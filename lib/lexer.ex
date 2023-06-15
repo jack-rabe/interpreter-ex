@@ -5,24 +5,8 @@ defmodule Lexer do
 
   @type token :: atom | integer | String.t()
 
-  @doc """
-    retrieves the next character, advancing the lexer one position
-
-  ## Examples
-
-  iex> Lexer.next_char(%Lexer{input: "let x = 5;"})
-  %{
-    char: "l",
-    lexer: %Lexer{
-      input: "let x = 5;",
-      tokens: [],
-      position: 0,
-      read_position: 1
-    }
-  }
-  """
   @spec next_char(%Lexer{}) :: %{char: String.t() | nil, lexer: %Lexer{}}
-  def next_char(initial = %Lexer{}) do
+  defp next_char(initial = %Lexer{}) do
     char =
       if initial.read_position >= String.length(initial.input) do
         nil
@@ -42,7 +26,7 @@ defmodule Lexer do
   end
 
   @spec read_identifier(%Lexer{}) :: {%Lexer{}, String.t()}
-  def read_identifier(initial = %Lexer{}) do
+  defp read_identifier(initial = %Lexer{}) do
     %{char: char, lexer: advanced_lexer} = next_char(initial)
 
     if(is_letter(char)) do
@@ -53,21 +37,21 @@ defmodule Lexer do
     end
   end
 
-  def is_letter(nil) do
+  defp is_letter(nil) do
     false
   end
 
   @spec is_letter(String.t()) :: boolean
-  def is_letter(c) do
+  defp is_letter(c) do
     [c | _] = String.to_charlist(c)
     (?a <= c and c <= ?z) or (?A <= c and c <= ?Z) or c == ?_
   end
 
-  def _is_number(c) do
+  defp _is_number(c) do
     c in ~w{0 1 2 3 4 5 6 7 8 9}
   end
 
-  def read_number(input = %Lexer{}) do
+  defp read_number(input = %Lexer{}) do
     %{char: char, lexer: advanced_lexer} = next_char(input)
 
     if(_is_number(char)) do
@@ -79,7 +63,7 @@ defmodule Lexer do
   end
 
   @spec skip_whitespace(%Lexer{}) :: %Lexer{}
-  def skip_whitespace(input = %Lexer{}) do
+  defp skip_whitespace(input = %Lexer{}) do
     %{char: c, lexer: advanced_lexer} = next_char(input)
 
     if not is_nil(c) and Regex.match?(~r(\s), c) do
@@ -90,7 +74,7 @@ defmodule Lexer do
   end
 
   @spec next_token(%Lexer{}) :: %Lexer{}
-  def next_token(input = %Lexer{}) do
+  defp next_token(input = %Lexer{}) do
     no_whitespace_lexer = skip_whitespace(input)
     %{char: c, lexer: advanced_lexer} = next_char(no_whitespace_lexer)
 
@@ -176,7 +160,7 @@ defmodule Lexer do
   end
 
   @spec put_token(%Lexer{}, token) :: %Lexer{}
-  def(put_token(lexer = %Lexer{}, token)) do
+  defp(put_token(lexer = %Lexer{}, token)) do
     %Lexer{
       input: lexer.input,
       tokens: [token | lexer.tokens],
@@ -192,7 +176,7 @@ defmodule Lexer do
   end
 
   @spec parse(%Lexer{}) :: %Lexer{} | list(token)
-  def(parse(lexer = %Lexer{})) do
+  def parse(lexer = %Lexer{}) do
     l = next_token(lexer)
     [last_token | _] = l.tokens
 
