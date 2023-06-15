@@ -185,6 +185,12 @@ defmodule Lexer do
     }
   end
 
+  @spec parse(String.t()) :: %Lexer{} | list(token)
+  def parse(input) when is_binary(input) do
+    lexer = %Lexer{input: input}
+    parse(lexer)
+  end
+
   @spec parse(%Lexer{}) :: %Lexer{} | list(token)
   def(parse(lexer = %Lexer{})) do
     l = next_token(lexer)

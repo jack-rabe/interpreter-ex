@@ -1,18 +1,13 @@
 defmodule Interpreter do
-  @moduledoc """
-  Documentation for `Interpreter`.
-  """
+  def start do
+    IO.puts("Welcome to the Monkey REPL!")
+    handle_input()
+  end
 
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> Interpreter.hello()
-      :world
-
-  """
-  def hello do
-    :world
+  defp handle_input do
+    input = IO.gets(">> ")
+    tokens = Lexer.parse(input)
+    IO.inspect(tokens)
+    handle_input()
   end
 end
