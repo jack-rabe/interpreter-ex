@@ -74,7 +74,7 @@ defmodule Lexer do
   end
 
   @spec next_token(%Lexer{}) :: %Lexer{}
-  defp next_token(input = %Lexer{}) do
+  def next_token(input = %Lexer{}) do
     no_whitespace_lexer = skip_whitespace(input)
     %{char: c, lexer: advanced_lexer} = next_char(no_whitespace_lexer)
 
@@ -169,14 +169,14 @@ defmodule Lexer do
     }
   end
 
-  @spec parse(String.t()) :: %Lexer{} | list(token)
-  def parse(input) when is_binary(input) do
+  @spec lex(String.t()) :: %Lexer{} | list(token)
+  def lex(input) when is_binary(input) do
     lexer = %Lexer{input: input}
-    parse(lexer)
+    lex(lexer)
   end
 
-  @spec parse(%Lexer{}) :: %Lexer{} | list(token)
-  def parse(lexer = %Lexer{}) do
+  @spec lex(%Lexer{}) :: %Lexer{} | list(token)
+  def lex(lexer = %Lexer{}) do
     l = next_token(lexer)
     [last_token | _] = l.tokens
 
@@ -184,7 +184,7 @@ defmodule Lexer do
       {nil, tokens} = List.pop_at(l.tokens, 0)
       Enum.reverse(tokens)
     else
-      parse(l)
+      lex(l)
     end
   end
 end

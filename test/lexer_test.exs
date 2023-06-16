@@ -4,7 +4,7 @@ defmodule LexerTest do
 
   test "tests that the correct tokens are returned" do
     lexer = %Lexer{input: "%<>==,=!+(){!=}"}
-    tokens = Lexer.parse(lexer)
+    tokens = Lexer.lex(lexer)
 
     assert tokens == [
              :illegal,
@@ -31,7 +31,7 @@ defmodule LexerTest do
     };
     let result = add(five, ten);
     ]}
-    tokens = Lexer.parse(lexer)
+    tokens = Lexer.lex(lexer)
 
     assert tokens ==
              [
