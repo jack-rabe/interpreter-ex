@@ -5,6 +5,10 @@ defmodule Parser do
     defstruct [:token, :name, :value]
   end
 
+  defmodule ReturnStatement do
+    defstruct [:token, :value]
+  end
+
   def parse(parser = %Parser{next_token: next_token}) do
     case next_token do
       nil ->
@@ -23,6 +27,9 @@ defmodule Parser do
     case parser.cur_token do
       :let ->
         parse_let_statement(parser)
+
+      :return ->
+        parse_return_statement(parser)
 
       _ ->
         nil
@@ -51,6 +58,12 @@ defmodule Parser do
 
     find_semicolon(assign_parser)
     |> put_statement(%LetStatement{token: :let, name: ident})
+  end
+
+  @spec parse_return_statement(%Parser{}) :: %Parser{}
+  defp parse_return_statement(parser = %Parser{}) do
+    find_semicolon(parser)
+    |> put_statement(%ReturnStatement{token: :return})
   end
 
   @spec put_statement(%Parser{}, term) :: %Parser{}

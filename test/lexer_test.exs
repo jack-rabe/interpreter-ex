@@ -30,6 +30,7 @@ defmodule LexerTest do
       x + y;
     };
     let result = add(five, ten);
+    return 5;
     ]}
     tokens = Lexer.lex(lexer)
 
@@ -70,6 +71,9 @@ defmodule LexerTest do
                :comma,
                "ten",
                :right_paren,
+               :semicolon,
+               :return,
+               5,
                :semicolon
              ]
   end

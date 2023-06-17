@@ -46,4 +46,25 @@ defmodule ParserTest do
       assert_raise MatchError, fn -> Parser.parse(initialized_parser) end
     end)
   end
+
+  test "return statements work correctly" do
+    input = ~s{
+   return x;
+   return 10;
+   return "res";
+    }
+
+    lexer = %Lexer{input: input}
+    parser = %Parser{lexer: lexer}
+    initialized_parser = Parser.advance_token(parser)
+    %Parser{statements: statements} = Parser.parse(initialized_parser)
+
+    assert(length(statements) == 3)
+
+    statements
+    |> Enum.with_index()
+    |> Enum.each(fn {el, idx} ->
+      assert(el.token == :return)
+    end)
+  end
 end

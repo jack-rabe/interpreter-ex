@@ -1,7 +1,7 @@
 defmodule Lexer do
   defstruct [:input, tokens: [], position: 0, read_position: 0]
 
-  @keywords %{"fn" => :function, "let" => :let}
+  @keywords %{"fn" => :function, "let" => :let, "return" => :return}
 
   @type token :: atom | integer | String.t()
 
