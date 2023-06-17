@@ -23,7 +23,27 @@ defmodule ParserTest do
     |> Enum.with_index()
     |> Enum.each(fn {%LetStatement{token: token, name: name}, idx} ->
       assert(token == :let)
-      assert(el = Enum.at(expected_identifiers, idx))
+      assert(name == Enum.at(expected_identifiers, idx))
+    end)
+  end
+
+  test "incorrect let statements throw errors" do
+    no_equal_input = ~s{
+   let x 5;
+    }
+    no_ident_input = ~s{
+   let = 5;
+    }
+    just_value_input = ~s{
+   let 5;
+    }
+    inputs = [no_equal_input, no_ident_input, just_value_input]
+
+    Enum.each(inputs, fn input ->
+      lexer = %Lexer{input: input}
+      parser = %Parser{lexer: lexer}
+      initialized_parser = Parser.advance_token(parser)
+      assert_raise MatchError, fn -> Parser.parse(initialized_parser) end
     end)
   end
 end

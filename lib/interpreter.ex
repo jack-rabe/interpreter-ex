@@ -6,7 +6,7 @@ defmodule Interpreter do
 
   defp handle_input do
     input = IO.gets(">> ")
-    tokens = Lexer.parse(input)
+    tokens = Lexer.lex(input)
     IO.inspect(tokens)
     handle_input()
   end

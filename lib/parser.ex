@@ -5,16 +5,17 @@ defmodule Parser do
     defstruct [:token, :name, :value]
   end
 
-  # @spec parse(%Parser{}) :: list(%put_statement{})
-  def parse(parser = %Parser{next_token: nil}) do
-    parser
-  end
+  def parse(parser = %Parser{next_token: next_token}) do
+    case next_token do
+      nil ->
+        parser
 
-  def parse(parser = %Parser{}) do
-    advanced_parser = parse_statement(parser)
+      _ ->
+        advanced_parser = parse_statement(parser)
 
-    advance_token(advanced_parser)
-    |> parse()
+        advance_token(advanced_parser)
+        |> parse()
+    end
   end
 
   @spec parse_statement(%Parser{}) :: term
@@ -55,7 +56,7 @@ defmodule Parser do
   @spec put_statement(%Parser{}, term) :: %Parser{}
   def put_statement(parser = %Parser{}, statement) do
     %Parser{
-      statements: [statement | parser.statements],
+      statements: parser.statements ++ [statement],
       cur_token: parser.cur_token,
       next_token: parser.next_token,
       lexer: parser.lexer
