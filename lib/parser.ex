@@ -1,6 +1,15 @@
 defmodule Parser do
   defstruct [:lexer, :cur_token, :next_token, statements: []]
 
+  # operator precedence levels
+  @lowest 1
+  @equals 2
+  @sum 3
+  @less_greater 4
+  @product 5
+  @prefix 6
+  @call 7
+
   defmodule LetStatement do
     defstruct [:token, :name, :value]
   end
@@ -11,6 +20,10 @@ defmodule Parser do
 
   defmodule ExpressionStatement do
     defstruct [:token, :value]
+  end
+
+  defmodule OperatorExpressionStatement do
+    defstruct [:left, :operator, :right]
   end
 
   def parse(parser = %Parser{next_token: next_token}) do
@@ -36,17 +49,13 @@ defmodule Parser do
         parse_return_statement(parser)
 
       _expression ->
-        parse_expression(parser)
+        parse_expression(parser, @lowest)
     end
   end
 
-  @spec parse_expression(%Parser{}) :: %Parser{}
-  def parse_expression(%{cur_token: cur_token} = parser = %Parser{}) do
+  @spec parse_expression(%Parser{}, integer) :: %Parser{}
+  def parse_expression(%{cur_token: cur_token} = parser = %Parser{}, _precedence_level) do
     cond do
-      # TODO handle prefix operators
-      cur_token in ["!", "-"] ->
-        parser
-
       is_binary(cur_token) ->
         find_semicolon(parser)
         |> put_statement(%ExpressionStatement{token: :identifier, value: cur_token})
@@ -54,6 +63,24 @@ defmodule Parser do
       is_integer(cur_token) ->
         find_semicolon(parser)
         |> put_statement(%ExpressionStatement{token: :number, value: cur_token})
+
+      # infix operators
+      cur_token in [:bang, :minus] ->
+        # TODO find semicolon
+        advanced_parser = advance_token(parser)
+
+        final_parser = parse_expression(advanced_parser, @lowest)
+        next_expression = List.last(final_parser.statements)
+
+        # we want to ignore intermediate statements that are generated and only append one
+        %Parser{
+          lexer: final_parser.lexer,
+          cur_token: final_parser.cur_token,
+          next_token: final_parser.next_token,
+          statements:
+            parser.statements ++
+              [%OperatorExpressionStatement{operator: cur_token, right: next_expression}]
+        }
     end
   end
 

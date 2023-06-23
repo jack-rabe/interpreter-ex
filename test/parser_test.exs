@@ -80,4 +80,29 @@ defmodule ParserTest do
     assert first_statement == %ExpressionStatement{token: :identifier, value: "var_name"}
     assert second_statement == %ExpressionStatement{token: :number, value: 15}
   end
+
+  test "infix operator expressions work" do
+    input = ~s{
+      -5;
+      !is_fast;
+    }
+
+    lexer = %Lexer{input: input}
+    parser = %Parser{lexer: lexer}
+    initialized_parser = Parser.advance_token(parser)
+    %Parser{statements: statements} = Parser.parse(initialized_parser)
+
+    assert statements == [
+             %Parser.OperatorExpressionStatement{
+               left: nil,
+               operator: :minus,
+               right: %Parser.ExpressionStatement{token: :number, value: 5}
+             },
+             %Parser.OperatorExpressionStatement{
+               left: nil,
+               operator: :bang,
+               right: %Parser.ExpressionStatement{token: :identifier, value: "is_fast"}
+             }
+           ]
+  end
 end
