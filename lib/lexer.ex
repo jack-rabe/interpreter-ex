@@ -37,18 +37,22 @@ defmodule Lexer do
     end
   end
 
-  defp is_letter(nil) do
+  def is_letter(nil) do
+    false
+  end
+
+  def is_letter(num) when is_integer(num) do
     false
   end
 
   @spec is_letter(String.t()) :: boolean
-  defp is_letter(c) do
+  def is_letter(c) do
     [c | _] = String.to_charlist(c)
     (?a <= c and c <= ?z) or (?A <= c and c <= ?Z) or c == ?_
   end
 
-  defp _is_number(c) do
-    c in ~w{0 1 2 3 4 5 6 7 8 9}
+  def _is_number(c) do
+    Regex.match?(~r/\d+/, c)
   end
 
   defp read_number(input = %Lexer{}) do

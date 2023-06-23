@@ -9,6 +9,10 @@ defmodule Parser do
     defstruct [:token, :value]
   end
 
+  defmodule ExpressionStatement do
+    defstruct [:token, :value]
+  end
+
   def parse(parser = %Parser{next_token: next_token}) do
     case next_token do
       nil ->
@@ -31,8 +35,25 @@ defmodule Parser do
       :return ->
         parse_return_statement(parser)
 
-      _ ->
-        nil
+      _expression ->
+        parse_expression(parser)
+    end
+  end
+
+  @spec parse_expression(%Parser{}) :: %Parser{}
+  def parse_expression(%{cur_token: cur_token} = parser = %Parser{}) do
+    cond do
+      # TODO handle prefix operators
+      cur_token in ["!", "-"] ->
+        parser
+
+      is_binary(cur_token) ->
+        find_semicolon(parser)
+        |> put_statement(%ExpressionStatement{token: :identifier, value: cur_token})
+
+      is_integer(cur_token) ->
+        find_semicolon(parser)
+        |> put_statement(%ExpressionStatement{token: :number, value: cur_token})
     end
   end
 

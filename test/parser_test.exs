@@ -2,7 +2,7 @@ defmodule ParserTest do
   use ExUnit.Case
   doctest Parser
 
-  alias Parser.LetStatement
+  alias Parser.{ExpressionStatement, LetStatement}
 
   test "let statements work correctly" do
     input = ~s{
@@ -62,9 +62,22 @@ defmodule ParserTest do
     assert(length(statements) == 3)
 
     statements
-    |> Enum.with_index()
-    |> Enum.each(fn {el, idx} ->
+    |> Enum.each(fn el ->
       assert(el.token == :return)
     end)
+  end
+
+  test "expressions work" do
+    input = ~s{
+      var_name;
+      15;
+    }
+
+    lexer = %Lexer{input: input}
+    parser = %Parser{lexer: lexer}
+    initialized_parser = Parser.advance_token(parser)
+    %Parser{statements: [first_statement, second_statement]} = Parser.parse(initialized_parser)
+    assert first_statement == %ExpressionStatement{token: :identifier, value: "var_name"}
+    assert second_statement == %ExpressionStatement{token: :number, value: 15}
   end
 end
