@@ -86,10 +86,8 @@ defmodule Parser do
 
   @spec advance_token(%Parser{}) :: %Parser{}
   def advance_token(parser = %Parser{}) do
-    lexer = Lexer.next_token(parser.lexer)
-    advanced_lexer = Lexer.next_token(lexer)
-    cur_token = List.first(lexer.tokens)
-    next_token = List.first(advanced_lexer.tokens)
+    {lexer, cur_token} = Lexer.next_token(parser.lexer)
+    {_, next_token} = Lexer.next_token(lexer)
 
     %Parser{
       lexer: lexer,

@@ -1,5 +1,5 @@
 defmodule Lexer do
-  defstruct [:input, tokens: [], position: 0, read_position: 0]
+  defstruct [:input, position: 0, read_position: 0]
 
   @keywords %{"fn" => :function, "let" => :let, "return" => :return}
 
@@ -18,7 +18,6 @@ defmodule Lexer do
       char: char,
       lexer: %Lexer{
         input: initial.input,
-        tokens: initial.tokens,
         position: initial.read_position,
         read_position: initial.read_position + 1
       }
@@ -77,7 +76,7 @@ defmodule Lexer do
     end
   end
 
-  @spec next_token(%Lexer{}) :: %Lexer{}
+  @spec next_token(%Lexer{}) :: {%Lexer{}, any()}
   def next_token(input = %Lexer{}) do
     no_whitespace_lexer = skip_whitespace(input)
     %{char: c, lexer: advanced_lexer} = next_char(no_whitespace_lexer)
@@ -160,35 +159,23 @@ defmodule Lexer do
           end
       end
 
-    put_token(final_lexer, token)
-  end
-
-  @spec put_token(%Lexer{}, token) :: %Lexer{}
-  defp(put_token(lexer = %Lexer{}, token)) do
-    %Lexer{
-      input: lexer.input,
-      tokens: [token | lexer.tokens],
-      position: lexer.position,
-      read_position: lexer.read_position
-    }
+    {final_lexer, token}
   end
 
   @spec lex(String.t()) :: %Lexer{} | list(token)
   def lex(input) when is_binary(input) do
     lexer = %Lexer{input: input}
-    lex(lexer)
+    lex(lexer, [])
   end
 
-  @spec lex(%Lexer{}) :: %Lexer{} | list(token)
-  def lex(lexer = %Lexer{}) do
-    l = next_token(lexer)
-    [last_token | _] = l.tokens
+  @spec lex(%Lexer{}, list(token)) :: %Lexer{} | list(token)
+  def lex(lexer = %Lexer{}, tokens) do
+    {lexer, token} = next_token(lexer)
 
-    if is_nil(last_token) do
-      {nil, tokens} = List.pop_at(l.tokens, 0)
+    if is_nil(token) do
       Enum.reverse(tokens)
     else
-      lex(l)
+      lex(lexer, [token | tokens])
     end
   end
 end

@@ -3,8 +3,8 @@ defmodule LexerTest do
   doctest Lexer
 
   test "tests that the correct tokens are returned" do
-    lexer = %Lexer{input: "%<>==,=!+(){!=}"}
-    tokens = Lexer.lex(lexer)
+    input = "%<>==,=!+(){!=}"
+    tokens = Lexer.lex(input)
 
     assert tokens == [
              :illegal,
@@ -24,15 +24,15 @@ defmodule LexerTest do
   end
 
   test "tests that the correct tokens are returned (includes identifiers)" do
-    lexer = %Lexer{input: ~s[let five = 5;
+    input = ~s[let five = 5;
     let ten = 10;
     let add = fn(x, y){
       x + y;
     };
     let result = add(five, ten);
     return 5;
-    ]}
-    tokens = Lexer.lex(lexer)
+    ]
+    tokens = Lexer.lex(input)
 
     assert tokens ==
              [
