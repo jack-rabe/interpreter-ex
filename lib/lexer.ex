@@ -1,7 +1,15 @@
 defmodule Lexer do
   defstruct [:input, position: 0, read_position: 0]
 
-  @keywords %{"fn" => :function, "let" => :let, "return" => :return}
+  @keywords %{
+    "fn" => :function,
+    "let" => :let,
+    "return" => :return,
+    "true" => true,
+    "false" => false,
+    "if" => :if,
+    "else" => :else
+  }
 
   @type token :: atom | integer | String.t()
 
@@ -109,6 +117,9 @@ defmodule Lexer do
 
         "-" ->
           {:minus, advanced_lexer}
+
+        "*" ->
+          {:asterisk, advanced_lexer}
 
         "!" ->
           %{char: c, lexer: lex} = next_char(advanced_lexer)

@@ -31,6 +31,8 @@ defmodule LexerTest do
     };
     let result = add(five, ten);
     return 5;
+    let val = 3 * 5;
+    let bool = true;
     ]
     tokens = Lexer.lex(input)
 
@@ -74,6 +76,18 @@ defmodule LexerTest do
                :semicolon,
                :return,
                5,
+               :semicolon,
+               :let,
+               "val",
+               :assign,
+               3,
+               :asterisk,
+               5,
+               :semicolon,
+               :let,
+               "bool",
+               :assign,
+               true,
                :semicolon
              ]
   end
